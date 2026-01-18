@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Scanner v11 - Full Suite</title>
+    <title>Scanner v12 - Always On</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -21,8 +21,7 @@
         input, select { background-color: rgba(20,20,20,1) !important; border-color: #333 !important; color: white !important; font-size: 16px !important; }
         .animate-in { animation: slideUpFade 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes slideUpFade { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        .bluetooth-glow { box-shadow: 0 0 10px #3b82f6; animation: pulse-blue 1.5s infinite; }
-        @keyframes pulse-blue { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .bluetooth-glow { box-shadow: 0 0 15px #3b82f6; border-color: #60a5fa; }
         #reader { border-radius: 1.5rem !important; overflow: hidden; width: 100% !important; }
         #reader video { object-fit: cover; border-radius: 1.5rem; }
     </style>
@@ -38,7 +37,7 @@
     </script>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
+        const { useState, useEffect, useMemo, useRef } = React;
 
         // ✅ TUS CREDENCIALES
         const FIREBASE_CONFIG = { 
@@ -210,25 +209,9 @@
             );
         };
 
-        // --- BLUETOOTH SCALE COMPONENT (V11: ADDED +/- 5) ---
-        const QuickEditModal = ({ item, onClose, onContinue, onUpdate, initialLocation, initialSubZone, onOpenCalibration }) => {
+        // --- GLOBAL BLUETOOTH & QUICK EDIT ---
+        const QuickEditModal = ({ item, scaleWeight, scaleConnected, onConnectScale, onClose, onContinue, onUpdate, initialLocation, initialSubZone, onOpenCalibration }) => {
             const [value, setValue] = useState(0);
-            const [scaleConnected, setScaleConnected] = useState(false);
-            const [scaleWeight, setScaleWeight] = useState(null);
-            const [scaleRawLbs, setScaleRawLbs] = useState(null); 
-            const [scaleError, setScaleError] = useState(null);
-            const [rawHex, setRawHex] = useState(""); 
-            const [calibrating, setCalibrating] = useState(false);
-            const [calibVal, setCalibVal] = useState("");
-            
-            // Toggle for Weight Calculation Mode
-            const [weightMode, setWeightMode] = useState(false);
-            
-            const [conversionFactor, setConversionFactor] = useState(() => {
-                const saved = localStorage.getItem('scale_factor');
-                return saved ? parseFloat(saved) : 453.592;
-            });
-
             const zones = ZONES_CONFIG[initialLocation] || [];
             const subZoneId = initialSubZone || (zones[0]?.id);
             const subZoneLabel = zones.find(z=>z.id===subZoneId)?.label;
@@ -256,80 +239,12 @@
                 if(delta>0) playSound('add'); else playSound('sub');
             };
 
-            const connectScale = async () => {
-                setScaleError(null);
-                try {
-                    const device = await navigator.bluetooth.requestDevice({
-                        acceptAllDevices: true,
-                        optionalServices: ['weight_scale', '0000fff0-0000-1000-8000-00805f9b34fb', '0000181d-0000-1000-8000-00805f9b34fb']
-                    });
-                    const server = await device.gatt.connect();
-                    let service, charUUID;
-                    try {
-                        service = await server.getPrimaryService('0000fff0-0000-1000-8000-00805f9b34fb');
-                        charUUID = '0000fff1-0000-1000-8000-00805f9b34fb';
-                    } catch(e) {
-                        try {
-                            service = await server.getPrimaryService('weight_scale');
-                            charUUID = 'weight_measurement';
-                        } catch(e2) { throw new Error("No weight service found."); }
-                    }
-                    const characteristic = await service.getCharacteristic(charUUID);
-                    await characteristic.startNotifications();
-                    characteristic.addEventListener('characteristicvaluechanged', handleScaleData);
-                    setScaleConnected(true);
-                    playSound('success');
-                } catch (error) {
-                    console.error(error);
-                    setScaleError("Error: " + error.message);
-                    playSound('error');
-                }
-            };
-
-            const handleScaleData = (event) => {
-                const data = event.target.value;
-                let hexArr = []; for(let i=0; i<data.byteLength; i++) hexArr.push(data.getUint8(i).toString(16).padStart(2,'0').toUpperCase());
-                setRawHex(hexArr.join(' '));
-                let rawLbsVal = 0;
-                if (data.byteLength > 4 && data.getUint8(0) === 0xA5) {
-                    const intVal = data.getUint16(2, true); 
-                    rawLbsVal = intVal / 1000; 
-                } else if (data.byteLength >= 4) {
-                        const w1 = data.getUint16(0, false); 
-                        if(w1 > 0 && w1 < 10000) rawLbsVal = w1 / 1000; 
-                        else rawLbsVal = data.getUint16(0, true) / 1000;
-                }
-                if(rawLbsVal > 0) { setScaleRawLbs(rawLbsVal); }
-            };
-
-            useEffect(() => {
-                if (scaleRawLbs !== null) {
-                    const grams = scaleRawLbs * conversionFactor;
-                    setScaleWeight(Math.round(grams));
-                    playSound('blip');
-                }
-            }, [scaleRawLbs, conversionFactor]);
-
-            const startCalibration = () => { setCalibVal(scaleWeight || ""); setCalibrating(true); };
-            const confirmCalibration = () => {
-                const realGrams = parseFloat(calibVal);
-                if (realGrams && scaleRawLbs) {
-                    const newFactor = realGrams / scaleRawLbs;
-                    setConversionFactor(newFactor);
-                    localStorage.setItem('scale_factor', newFactor);
-                    setCalibrating(false);
-                    playSound('success');
-                }
-            };
-            
-            // AUTO-CALCULATION LOGIC
             const calculateFromWeight = () => {
                 if(scaleWeight === null) return;
                 const full = parseFloat(item.weight_full);
                 const empty = parseFloat(item.weight_empty);
                 
                 if (!full || !empty) {
-                    // Alert user to setup first
                     onOpenCalibration(item);
                     return;
                 }
@@ -337,12 +252,8 @@
                 const netLiquid = full - empty;
                 const currentLiquid = scaleWeight - empty;
                 
-                // Math: 400g / 800g = 0.5
                 let calculatedUnits = currentLiquid / netLiquid;
-                
-                // Clamp and Round
                 if (calculatedUnits < 0) calculatedUnits = 0;
-                // if (calculatedUnits > 1.1) calculatedUnits = 1; // Optional: Cap at 1? Maybe not for overfill.
                 
                 const finalVal = Math.round(calculatedUnits * 100) / 100;
                 updateValue(finalVal);
@@ -370,47 +281,25 @@
                     {/* --- SCALE UI SECTION --- */}
                     <div className="mt-6 w-full px-6 max-w-sm">
                         {!scaleConnected ? (
-                            <button onClick={connectScale} className="w-full py-3 bg-blue-900/30 border border-blue-500/50 rounded-xl text-blue-400 font-bold flex items-center justify-center gap-2 hover:bg-blue-900/50 transition-colors">
+                            <button onClick={onConnectScale} className="w-full py-3 bg-blue-900/30 border border-blue-500/50 rounded-xl text-blue-400 font-bold flex items-center justify-center gap-2 hover:bg-blue-900/50 transition-colors">
                                 <Icons.Bluetooth /> Connect Scale
                             </button>
                         ) : (
                             <div className="bg-blue-900/20 border border-blue-500/50 rounded-xl p-2 flex flex-col gap-2">
-                                {!calibrating ? (
-                                    <>
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3 pl-2">
-                                                <div className={`w-3 h-3 rounded-full bg-blue-500 ${rawHex?'bluetooth-glow':''}`}></div>
-                                                <div className="text-2xl font-mono font-bold text-white">{scaleWeight !== null ? `${scaleWeight}g` : '0g'}</div>
-                                            </div>
-                                            <div className="flex gap-2">
-                                                {/* Setup Button (Gear) */}
-                                                <button onClick={() => onOpenCalibration(item)} className="bg-gray-800 text-indigo-400 px-3 py-2 rounded-lg font-bold text-xs border border-gray-600 active:scale-95"><Icons.Settings className="w-4 h-4"/></button>
-                                                {/* Auto-Calc Button */}
-                                                <button onClick={calculateFromWeight} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm active:scale-95 flex items-center gap-2">
-                                                    <Icons.Scale className="w-4 h-4"/> USE
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div className="flex justify-between items-center px-2">
-                                            <div className="text-[10px] font-mono text-blue-300/50 uppercase tracking-widest">RAW: {rawHex || "WAITING"}</div>
-                                            {/* Mini calibration for scale factor */}
-                                            <button onClick={startCalibration} className="text-[10px] text-gray-500 hover:text-white underline">Calibrate Scale</button>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <div className="flex flex-col gap-2 animate-in">
-                                        <div className="text-white text-sm text-center font-bold">Calibrate Scale Factor</div>
-                                        <div className="text-gray-400 text-xs text-center">Type scale screen value:</div>
-                                        <div className="flex gap-2">
-                                            <input type="number" value={calibVal} onChange={e=>setCalibVal(e.target.value)} className="flex-1 bg-black border border-blue-500 rounded px-2 py-2 text-white font-mono font-bold text-center" autoFocus />
-                                            <button onClick={confirmCalibration} className="bg-green-600 text-white px-3 rounded font-bold">OK</button>
-                                            <button onClick={()=>setCalibrating(false)} className="bg-red-900/50 text-red-200 px-3 rounded font-bold">X</button>
-                                        </div>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3 pl-2">
+                                        <div className={`w-3 h-3 rounded-full bg-blue-500 bluetooth-glow`}></div>
+                                        <div className="text-2xl font-mono font-bold text-white">{scaleWeight !== null ? `${scaleWeight}g` : '0g'}</div>
                                     </div>
-                                )}
+                                    <div className="flex gap-2">
+                                        <button onClick={() => onOpenCalibration(item)} className="bg-gray-800 text-indigo-400 px-3 py-2 rounded-lg font-bold text-xs border border-gray-600 active:scale-95"><Icons.Settings className="w-4 h-4"/></button>
+                                        <button onClick={calculateFromWeight} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm active:scale-95 flex items-center gap-2">
+                                            <Icons.Scale className="w-4 h-4"/> USE
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         )}
-                        {scaleError && <div className="text-red-500 text-xs text-center mt-2 font-mono">{scaleError}</div>}
                     </div>
                     {/* ------------------------ */}
 
@@ -465,7 +354,49 @@
             const [search, setSearch] = useState("");
             const [status, setStatus] = useState("Connecting...");
             const [pendingBarcode, setPendingBarcode] = useState(null);
-            const [calibratingItem, setCalibratingItem] = useState(null); // For Weight Setup Modal
+            const [calibratingItem, setCalibratingItem] = useState(null);
+            
+            // GLOBAL SCALE STATE
+            const [scaleConnected, setScaleConnected] = useState(false);
+            const [scaleWeight, setScaleWeight] = useState(null);
+            const [scaleRawLbs, setScaleRawLbs] = useState(null);
+            const [scaleChar, setScaleChar] = useState(null);
+            const [conversionFactor, setConversionFactor] = useState(() => {
+                const saved = localStorage.getItem('scale_factor');
+                return saved ? parseFloat(saved) : 453.592;
+            });
+
+            // BLUETOOTH LOGIC (PERSISTENT)
+            const globalConnectScale = async () => {
+                try {
+                    const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true, optionalServices: ['weight_scale', '0000fff0-0000-1000-8000-00805f9b34fb', '0000181d-0000-1000-8000-00805f9b34fb'] });
+                    const server = await device.gatt.connect();
+                    let service, charUUID;
+                    try { service = await server.getPrimaryService('0000fff0-0000-1000-8000-00805f9b34fb'); charUUID = '0000fff1-0000-1000-8000-00805f9b34fb'; } 
+                    catch(e) { try { service = await server.getPrimaryService('weight_scale'); charUUID = 'weight_measurement'; } catch(e2) { throw new Error("No service"); } }
+                    const characteristic = await service.getCharacteristic(charUUID);
+                    await characteristic.startNotifications();
+                    characteristic.addEventListener('characteristicvaluechanged', handleScaleData);
+                    setScaleChar(characteristic);
+                    setScaleConnected(true);
+                    playSound('success');
+                } catch (error) { console.error(error); playSound('error'); }
+            };
+
+            const handleScaleData = (event) => {
+                const data = event.target.value;
+                let rawLbsVal = 0;
+                if (data.byteLength > 4 && data.getUint8(0) === 0xA5) { const intVal = data.getUint16(2, true); rawLbsVal = intVal / 1000; } 
+                else if (data.byteLength >= 4) { const w1 = data.getUint16(0, false); if(w1 > 0 && w1 < 10000) rawLbsVal = w1 / 1000; else rawLbsVal = data.getUint16(0, true) / 1000; }
+                setScaleRawLbs(rawLbsVal); // UPDATE EVEN IF 0
+            };
+
+            useEffect(() => {
+                if (scaleRawLbs !== null) {
+                    const grams = scaleRawLbs * conversionFactor;
+                    setScaleWeight(Math.round(grams));
+                }
+            }, [scaleRawLbs, conversionFactor]);
 
             useEffect(() => {
                 const app = window.fb.initializeApp(FIREBASE_CONFIG);
@@ -556,6 +487,7 @@
                     <div className="flex justify-between items-center mb-6">
                         <h1 className="font-black text-2xl text-white italic">SCANNER <span className="text-indigo-500">PRO</span></h1>
                         <div className="flex items-center gap-2">
+                            {!scaleConnected && <button onClick={globalConnectScale} className="bg-gray-800 text-blue-400 p-2 rounded-lg border border-gray-700 active:scale-95 transition-all animate-pulse"><Icons.Bluetooth /></button>}
                             <button onClick={handleBackup} className="bg-gray-800 text-emerald-400 p-2 rounded-lg border border-gray-700 active:scale-95 transition-all"><Icons.Save /></button>
                             <button onClick={() => setShowPurchases(true)} className="bg-gray-800 text-emerald-400 p-2 rounded-lg border border-gray-700 active:scale-95 transition-all"><Icons.Package /></button>
                             <button onClick={() => setShowPremium(true)} className="bg-gray-800 text-yellow-400 p-2 rounded-lg border border-gray-700 active:scale-95 transition-all"><Icons.Star /></button>
@@ -622,6 +554,9 @@
                     {editItem && (
                         <QuickEditModal 
                             item={editItem} 
+                            scaleWeight={scaleWeight}
+                            scaleConnected={scaleConnected}
+                            onConnectScale={globalConnectScale}
                             initialLocation={loc} 
                             initialSubZone={subZone} 
                             onClose={() => setEditItem(null)} 
