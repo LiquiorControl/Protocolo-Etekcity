@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Scanner v10 - Weight Logic</title>
+    <title>Scanner v11 - Full Suite</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -210,7 +210,7 @@
             );
         };
 
-        // --- BLUETOOTH SCALE COMPONENT (V10: AUTO-CALIBRATION) ---
+        // --- BLUETOOTH SCALE COMPONENT (V11: ADDED +/- 5) ---
         const QuickEditModal = ({ item, onClose, onContinue, onUpdate, initialLocation, initialSubZone, onOpenCalibration }) => {
             const [value, setValue] = useState(0);
             const [scaleConnected, setScaleConnected] = useState(false);
@@ -365,7 +365,7 @@
                         Total Zone: <span className="text-white">{value}</span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 w-full px-6 max-w-sm mb-4"><div className="flex flex-col gap-2 items-end"><button onClick={()=>handleDelta(-12)} className="w-full h-12 bg-red-900/20 text-red-500 border border-red-900/50 rounded-xl font-bold">- 12</button><button onClick={()=>handleDelta(-6)} className="w-full h-12 bg-red-900/20 text-red-500 border border-red-900/50 rounded-xl font-bold">- 6</button><button onClick={()=>handleDelta(-1)} className="w-full h-14 bg-red-600 text-white rounded-xl font-black text-2xl shadow-lg border border-red-400">- 1</button></div><div className="flex flex-col gap-2 items-start"><button onClick={()=>handleDelta(12)} className="w-full h-12 bg-emerald-900/20 text-emerald-500 border border-emerald-900/50 rounded-xl font-bold">+ 12</button><button onClick={()=>handleDelta(6)} className="w-full h-12 bg-emerald-900/20 text-emerald-500 border border-emerald-900/50 rounded-xl font-bold">+ 6</button><button onClick={()=>handleDelta(1)} className="w-full h-14 bg-emerald-600 text-white rounded-xl font-black text-2xl shadow-lg border border-emerald-400">+ 1</button></div></div><div className="grid grid-cols-2 gap-4 w-full px-6 max-w-sm"><button onClick={()=>handleDelta(-0.1)} className="bg-gray-800 text-red-400 h-12 rounded-xl font-bold text-lg border border-gray-700">- 0.1</button><button onClick={()=>handleDelta(0.1)} className="bg-gray-800 text-emerald-400 h-12 rounded-xl font-bold text-lg border border-gray-700">+ 0.1</button></div>
+                    <div className="grid grid-cols-2 gap-4 w-full px-6 max-w-sm mb-4"><div className="flex flex-col gap-2 items-end"><button onClick={()=>handleDelta(-12)} className="w-full h-12 bg-red-900/20 text-red-500 border border-red-900/50 rounded-xl font-bold">- 12</button><button onClick={()=>handleDelta(-6)} className="w-full h-12 bg-red-900/20 text-red-500 border border-red-900/50 rounded-xl font-bold">- 6</button><button onClick={()=>handleDelta(-5)} className="w-full h-12 bg-red-900/20 text-red-500 border border-red-900/50 rounded-xl font-bold">- 5</button><button onClick={()=>handleDelta(-1)} className="w-full h-14 bg-red-600 text-white rounded-xl font-black text-2xl shadow-lg border border-red-400">- 1</button></div><div className="flex flex-col gap-2 items-start"><button onClick={()=>handleDelta(12)} className="w-full h-12 bg-emerald-900/20 text-emerald-500 border border-emerald-900/50 rounded-xl font-bold">+ 12</button><button onClick={()=>handleDelta(6)} className="w-full h-12 bg-emerald-900/20 text-emerald-500 border border-emerald-900/50 rounded-xl font-bold">+ 6</button><button onClick={()=>handleDelta(5)} className="w-full h-12 bg-emerald-900/20 text-emerald-500 border border-emerald-900/50 rounded-xl font-bold">+ 5</button><button onClick={()=>handleDelta(1)} className="w-full h-14 bg-emerald-600 text-white rounded-xl font-black text-2xl shadow-lg border border-emerald-400">+ 1</button></div></div><div className="grid grid-cols-2 gap-4 w-full px-6 max-w-sm"><button onClick={()=>handleDelta(-0.1)} className="bg-gray-800 text-red-400 h-12 rounded-xl font-bold text-lg border border-gray-700">- 0.1</button><button onClick={()=>handleDelta(0.1)} className="bg-gray-800 text-emerald-400 h-12 rounded-xl font-bold text-lg border border-gray-700">+ 0.1</button></div>
                 
                     {/* --- SCALE UI SECTION --- */}
                     <div className="mt-6 w-full px-6 max-w-sm">
