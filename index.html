@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Scanner v16 - Stable Weight</title>
+    <title>Scanner v17 - Stable</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -21,12 +21,7 @@
         input, select { background-color: rgba(20,20,20,1) !important; border-color: #333 !important; color: white !important; font-size: 16px !important; }
         .animate-in { animation: slideUpFade 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes slideUpFade { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        
-        /* Bluetooth Heartbeat Animation */
-        .ping-dot { width: 8px; height: 8px; background-color: #10b981; border-radius: 50%; display: inline-block; }
-        .ping-active { animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite; }
-        @keyframes ping { 75%, 100% { transform: scale(2); opacity: 0; } }
-
+        .bluetooth-glow { box-shadow: 0 0 15px #3b82f6; border-color: #60a5fa; }
         #reader { border-radius: 1.5rem !important; overflow: hidden; width: 100% !important; }
         #reader video { object-fit: cover; border-radius: 1.5rem; }
         .menu-backdrop { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); }
@@ -556,10 +551,16 @@
                 <div className="pb-24 pt-4 px-4 max-w-xl mx-auto">
                     <div className="flex justify-between items-center mb-6 relative">
                         <h1 className="font-black text-2xl text-white italic">SCANNER <span className="text-indigo-500">PRO</span></h1>
+                        
+                        {/* HEADER RIGHT SIDE: CLOUD STATUS + BLUETOOTH + SETTINGS */}
                         <div className="flex items-center gap-2">
+                            <div className="text-xs font-bold text-emerald-400 bg-emerald-900/30 px-2 py-1 rounded border border-emerald-500/30">Cloud ☁️</div>
+                            
                             {!scaleConnected && <button onClick={globalConnectScale} className="bg-gray-800 text-blue-400 p-2 rounded-lg border border-gray-700 active:scale-95 transition-all animate-pulse"><Icons.Bluetooth /></button>}
+                            
                             <button onClick={() => setShowMenu(!showMenu)} className="bg-gray-800 text-white p-2 rounded-lg border border-gray-700 active:scale-95 transition-all"><Icons.Settings /></button>
                         </div>
+
                         {showMenu && (
                             <>
                                 <div className="menu-backdrop" onClick={() => setShowMenu(false)}></div>
@@ -572,8 +573,6 @@
                             </>
                         )}
                     </div>
-
-                    <div className="text-xs font-mono text-emerald-400 border border-emerald-900 bg-emerald-900/20 px-2 py-1 rounded w-fit mb-4">{status}</div>
 
                     <button onClick={() => setShowLoc(true)} className="w-full bg-gray-900 border border-gray-700 p-4 rounded-2xl flex items-center justify-between mb-4 group active:scale-95 transition-all">
                         <div className="flex items-center gap-3">
