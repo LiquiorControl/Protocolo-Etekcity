@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Scanner Móvil v7 - Etekcity Ready</title>
+    <title>Scanner Móvil v8 - Open Bluetooth</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -142,13 +142,13 @@
             );
         };
 
-        // --- BLUETOOTH SCALE COMPONENT (ETEKCITY/GENERIC SUPPORT) ---
+        // --- BLUETOOTH SCALE COMPONENT (OPEN MODE) ---
         const QuickEditModal = ({ item, onClose, onContinue, onUpdate, initialLocation, initialSubZone }) => {
             const [value, setValue] = useState(0);
             const [scaleConnected, setScaleConnected] = useState(false);
             const [scaleWeight, setScaleWeight] = useState(null);
             const [scaleError, setScaleError] = useState(null);
-            const [rawHex, setRawHex] = useState(""); // DEBUG VISUAL
+            const [rawHex, setRawHex] = useState(""); 
             
             const zones = ZONES_CONFIG[initialLocation] || [];
             const subZoneId = initialSubZone || (zones[0]?.id);
@@ -177,10 +177,15 @@
             const connectScale = async () => {
                 setScaleError(null);
                 try {
-                    // INTENTAMOS CONECTAR A TODOS LOS SERVICIOS CONOCIDOS (ESTANDAR Y ETEKCITY/ISSC)
+                    // CAMBIO V8: Usamos acceptAllDevices para encontrar la balanza sí o sí.
+                    // Esto mostrará TODOS los dispositivos cercanos. Tú debes elegir la balanza.
                     const device = await navigator.bluetooth.requestDevice({
-                        filters: [{ services: ['weight_scale'] }, { services: ['0000fff0-0000-1000-8000-00805f9b34fb'] }],
-                        optionalServices: ['weight_scale', '0000fff0-0000-1000-8000-00805f9b34fb']
+                        acceptAllDevices: true,
+                        optionalServices: [
+                            'weight_scale', 
+                            '0000fff0-0000-1000-8000-00805f9b34fb', // Etekcity / ISSC
+                            '0000181d-0000-1000-8000-00805f9b34fb'  // Standard Weight
+                        ]
                     });
                     
                     const server = await device.gatt.connect();
@@ -193,9 +198,13 @@
                         service = await server.getPrimaryService('0000fff0-0000-1000-8000-00805f9b34fb');
                         charUUID = '0000fff1-0000-1000-8000-00805f9b34fb';
                     } catch(e) {
-                        // 2. Si falla, intentar estándar
-                        service = await server.getPrimaryService('weight_scale');
-                        charUUID = 'weight_measurement';
+                        try {
+                            // 2. Si falla, intentar estándar
+                            service = await server.getPrimaryService('weight_scale');
+                            charUUID = 'weight_measurement';
+                        } catch(e2) {
+                            throw new Error("No weight service found on this device.");
+                        }
                     }
 
                     const characteristic = await service.getCharacteristic(charUUID);
@@ -206,7 +215,7 @@
 
                 } catch (error) {
                     console.error(error);
-                    setScaleError("Fail: " + error.message);
+                    setScaleError("Error: " + error.message);
                     playSound('error');
                 }
             };
@@ -214,18 +223,16 @@
             const handleScaleData = (event) => {
                 const data = event.target.value;
                 
-                // --- DEBUG HEX (PARA VER QUE MANDA LA BALANZA) ---
+                // --- DEBUG HEX ---
                 let hexArr = [];
                 for(let i=0; i<data.byteLength; i++) hexArr.push(data.getUint8(i).toString(16).padStart(2,'0').toUpperCase());
                 setRawHex(hexArr.join(' '));
-                // ------------------------------------------------
+                // -----------------
 
                 let weight = 0;
                 
-                // ESTRATEGIA DE DECODIFICACIÓN
+                // DECODIFICADOR ADAPTATIVO
                 if (data.byteLength >= 4) {
-                     // Intento genérico: muchos chips ISSC mandan el peso en bytes 1-2 o 2-3
-                     // Probamos leer Uint16 en diferentes offsets hasta encontrar algo sensato (0-5000g)
                      const w1 = data.getUint16(0, false); // Big Endian offset 0
                      const w2 = data.getUint16(1, false); // Big Endian offset 1
                      
@@ -243,8 +250,7 @@
 
             const applyWeight = () => {
                 if(scaleWeight !== null) {
-                    // Asumimos que la balanza manda GRAMOS. Convertimos a unidades decimales (Litros/Kg)
-                    // Ej: 450g -> 0.45
+                    // Conversión: Gramos a Unidad (0.XXX)
                     const val = scaleWeight / 1000; 
                     updateValue(val);
                     playSound('success');
@@ -258,7 +264,7 @@
                 <div className="mt-6 w-full px-6 max-w-sm">
                     {!scaleConnected ? (
                         <button onClick={connectScale} className="w-full py-3 bg-blue-900/30 border border-blue-500/50 rounded-xl text-blue-400 font-bold flex items-center justify-center gap-2 hover:bg-blue-900/50 transition-colors">
-                            <Icons.Bluetooth /> Connect Etekcity
+                            <Icons.Bluetooth /> Connect Scale (Show All)
                         </button>
                     ) : (
                         <div className="bg-blue-900/20 border border-blue-500/50 rounded-xl p-2 flex flex-col gap-2">
@@ -269,7 +275,6 @@
                                 </div>
                                 <button onClick={applyWeight} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm active:scale-95">USE</button>
                             </div>
-                            {/* RAW HEX DEBUGGER (Para calibración) */}
                             <div className="text-[10px] font-mono text-blue-300/50 text-center uppercase tracking-widest break-all">RAW: {rawHex || "WAITING DATA..."}</div>
                         </div>
                     )}
