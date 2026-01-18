@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Scanner v21 - Fixed & Stable</title>
+    <title>Scanner v22 - Final Fix</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -38,7 +38,7 @@
     </script>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo, useRef } = React;
+        const { useState, useEffect, useMemo } = React;
 
         // ✅ TUS CREDENCIALES
         const FIREBASE_CONFIG = { 
@@ -69,6 +69,7 @@
             } catch (e) {}
         };
 
+        // --- ICONS ---
         const IconWrapper = ({ children, className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{children}</svg>);
         const Icons = {
             Scan: (p) => <IconWrapper {...p}><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect width="10" height="6" x="7" y="9" rx="1"/></IconWrapper>,
@@ -142,7 +143,7 @@
             const filtered = data.map(c => ({ ...c, items: c.items.filter(i => i.name.toLowerCase().includes(search.toLowerCase())) })).filter(c => c.items.length > 0);
             return (
                 <div className="fixed inset-0 bg-black/95 z-50 flex flex-col animate-in">
-                    <div className="p-4 bg-gray-900 border-b border-gray-800 flex justify-between items-center"><h2 className="text-xl font-bold text-red-400 flex items-center gap-2"><Icons.Link /> Unknown Code</h2><button onClick={onClose} className="text-gray-400 font-bold px-3 py-1 bg-gray-800 rounded-lg">Cancel</button></div><div className="bg-red-900/20 border border-red-500/50 p-2 rounded-lg text-center font-mono text-red-200 font-bold">{barcode}</div><p className="text-gray-400 text-sm text-center">Select product to link this code:</p></div>
+                    <div className="p-4 bg-gray-900 border-b border-gray-800 flex flex-col gap-2"><div className="flex justify-between items-center"><h2 className="text-xl font-bold text-red-400 flex items-center gap-2"><Icons.Link /> Unknown Code</h2><button onClick={onClose} className="text-gray-400 font-bold px-3 py-1 bg-gray-800 rounded-lg">Cancel</button></div><div className="bg-red-900/20 border border-red-500/50 p-2 rounded-lg text-center font-mono text-red-200 font-bold">{barcode}</div><p className="text-gray-400 text-sm text-center">Select product to link this code:</p></div>
                     <div className="p-4 bg-black border-b border-gray-800"><input type="text" placeholder="Search product name..." className="w-full bg-gray-900 border border-gray-700 rounded-xl py-3 px-4 text-white focus:border-indigo-500 outline-none" value={search} onChange={e=>setSearch(e.target.value)} autoFocus /></div>
                     <div className="flex-1 overflow-y-auto p-4 space-y-4">{filtered.map(cat => (<div key={cat.category}><h3 className="text-indigo-400 font-bold text-xs uppercase mb-2">{cat.category}</h3>{cat.items.map(item => (<button key={item.id} onClick={() => onLink(item)} className="w-full text-left bg-gray-900 border border-gray-800 p-4 rounded-xl mb-2 flex justify-between items-center active:bg-indigo-900 transition-colors"><span className="font-bold text-white">{item.name}</span><span className="text-xs text-gray-500">Link →</span></button>))}</div>))}</div>
                 </div>
@@ -277,13 +278,9 @@
             const confirmScaleCalibration = () => {
                 const realGrams = parseFloat(calibVal);
                 if (realGrams && scaleRawLbs) { 
-                    // Calculate and update global factor without reload
-                    const currentFactor = parseFloat(localStorage.getItem('scale_factor') || 453.592);
                     const newFactor = realGrams / scaleRawLbs;
-                    
                     localStorage.setItem('scale_factor', newFactor);
-                    onManualScaleUpdate(newFactor); // Prop to update state in App
-                    
+                    onManualScaleUpdate(newFactor); 
                     setCalibratingScale(false);
                     playSound('success');
                 }
@@ -412,6 +409,7 @@
             const [scaleWeight, setScaleWeight] = useState(0); // DEFAULT 0
             const [scaleRawLbs, setScaleRawLbs] = useState(0);
             const [scaleChar, setScaleChar] = useState(null);
+            const [scaleOffset, setScaleOffset] = useState(0); // SOFTWARE TARE
             
             const [conversionFactor, setConversionFactor] = useState(() => {
                 const saved = localStorage.getItem('scale_factor');
@@ -441,28 +439,30 @@
                 if (data.byteLength > 4 && data.getUint8(0) === 0xA5) { const intVal = data.getUint16(2, true); rawLbsVal = intVal / 1000; } 
                 else if (data.byteLength >= 4) { const w1 = data.getUint16(0, false); if(w1 > 0 && w1 < 10000) rawLbsVal = w1 / 1000; else rawLbsVal = data.getUint16(0, true) / 1000; }
                 
-                // UPDATE RAW
+                // NO FILTER - ALWAYS UPDATE
                 setScaleRawLbs(rawLbsVal); 
             };
 
-            // Calculate final weight
+            // Calculate final weight with Offset (Software Tare)
             useEffect(() => {
                 if (scaleRawLbs !== null) {
                     const rawGrams = scaleRawLbs * conversionFactor;
-                    setScaleWeight(Math.round(rawGrams));
+                    const finalGrams = Math.max(0, Math.round(rawGrams - scaleOffset));
+                    setScaleWeight(finalGrams);
                 }
-            }, [scaleRawLbs, conversionFactor]);
+            }, [scaleRawLbs, conversionFactor, scaleOffset]);
 
-            // Manual Zero Function (HARD RESET)
+            // Manual Zero Function
             const handleZeroScale = () => {
-                // FORCE RESET VISUALS
-                setScaleRawLbs(0);
-                setScaleWeight(0);
+                // HARD RESET: Forget the offset, show RAW weight
+                setScaleOffset(0); 
                 playSound('sub'); 
             };
 
             const updateScaleFactor = (newFactor) => {
                 setConversionFactor(newFactor);
+                // Also reset offset on re-calibration to avoid confusion
+                setScaleOffset(0); 
             };
 
             useEffect(() => {
@@ -472,7 +472,7 @@
                 window.fb.signInAnonymously(auth);
                 window.fb.onAuthStateChanged(auth, (u) => {
                     if (u) {
-                        setStatus("Cloud ☁️");
+                        setStatus("Cloud Connected ☁️");
                         const path = typeof __app_id !== 'undefined' ? `artifacts/${__app_id}/public/data/inventory` : 'inventory';
                         window.fb.onSnapshot(window.fb.doc(db, path, 'master'), (s) => {
                             if(s.exists()) setData(s.data().items);
@@ -554,7 +554,7 @@
                     <div className="flex justify-between items-center mb-6 relative">
                         <div className="flex items-center gap-3">
                             <h1 className="font-black text-2xl text-white italic">SCANNER <span className="text-indigo-500">PRO</span></h1>
-                            <div className="text-xs font-bold text-emerald-400 bg-emerald-900/30 px-2 py-1 rounded border border-emerald-500/30">{status}</div>
+                            <div className="text-xs font-bold text-emerald-400 bg-emerald-900/30 px-2 py-1 rounded border border-emerald-500/30">Cloud ☁️</div>
                         </div>
                         
                         {/* HEADER RIGHT SIDE: BLUETOOTH + SETTINGS */}
