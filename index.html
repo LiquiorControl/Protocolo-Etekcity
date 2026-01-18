@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Scanner Móvil v8 - Open Bluetooth</title>
+    <title>Scanner Móvil v9 - Calibrado</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -40,7 +40,6 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
 
-        // ✅ TUS CREDENCIALES
         const FIREBASE_CONFIG = { 
             apiKey: "AIzaSyDqdJcKILp5kQ4sTxVm8Ch5E7oXfMD3BAM",
             authDomain: "master-control-palmas.firebaseapp.com",
@@ -142,7 +141,7 @@
             );
         };
 
-        // --- BLUETOOTH SCALE COMPONENT (OPEN MODE) ---
+        // --- BLUETOOTH SCALE COMPONENT (CALIBRATED V9) ---
         const QuickEditModal = ({ item, onClose, onContinue, onUpdate, initialLocation, initialSubZone }) => {
             const [value, setValue] = useState(0);
             const [scaleConnected, setScaleConnected] = useState(false);
@@ -177,8 +176,6 @@
             const connectScale = async () => {
                 setScaleError(null);
                 try {
-                    // CAMBIO V8: Usamos acceptAllDevices para encontrar la balanza sí o sí.
-                    // Esto mostrará TODOS los dispositivos cercanos. Tú debes elegir la balanza.
                     const device = await navigator.bluetooth.requestDevice({
                         acceptAllDevices: true,
                         optionalServices: [
@@ -199,7 +196,6 @@
                         charUUID = '0000fff1-0000-1000-8000-00805f9b34fb';
                     } catch(e) {
                         try {
-                            // 2. Si falla, intentar estándar
                             service = await server.getPrimaryService('weight_scale');
                             charUUID = 'weight_measurement';
                         } catch(e2) {
@@ -229,28 +225,32 @@
                 setRawHex(hexArr.join(' '));
                 // -----------------
 
-                let weight = 0;
+                let weightGrams = 0;
                 
-                // DECODIFICADOR ADAPTATIVO
-                if (data.byteLength >= 4) {
-                     const w1 = data.getUint16(0, false); // Big Endian offset 0
-                     const w2 = data.getUint16(1, false); // Big Endian offset 1
-                     
-                     if(w1 > 0 && w1 < 10000) weight = w1;
-                     else if(w2 > 0 && w2 < 10000) weight = w2;
-                     else weight = data.getUint16(0, true); // Little Endian
+                // --- PROTOCOLO ETEKCITY (DETECTADO: HEADER A5) ---
+                if (data.byteLength > 4 && data.getUint8(0) === 0xA5) {
+                    // Los bytes 2 y 3 contienen el peso en LIBRAS * 1000
+                    const rawLbs = data.getUint16(2, true); // Little Endian
+                    const lbs = rawLbs / 1000;
+                    weightGrams = lbs * 453.592; // Convertir a Gramos
+                } 
+                // --- PROTOCOLO GENERICO (FALLBACK) ---
+                else if (data.byteLength >= 4) {
+                     const w1 = data.getUint16(0, false); 
+                     const w2 = data.getUint16(1, false);
+                     if(w1 > 0 && w1 < 10000) weightGrams = w1;
+                     else weightGrams = data.getUint16(0, true);
                 }
                 
-                // Si el valor tiene sentido, lo usamos
-                if(weight > 0) {
-                     setScaleWeight(weight);
+                if(weightGrams > 0) {
+                     setScaleWeight(Math.round(weightGrams)); // Redondear a gramos enteros
                      playSound('blip');
                 }
             };
 
             const applyWeight = () => {
                 if(scaleWeight !== null) {
-                    // Conversión: Gramos a Unidad (0.XXX)
+                    // Convertir Gramos a Unidad decimal (ej: 750g = 0.75)
                     const val = scaleWeight / 1000; 
                     updateValue(val);
                     playSound('success');
@@ -264,7 +264,7 @@
                 <div className="mt-6 w-full px-6 max-w-sm">
                     {!scaleConnected ? (
                         <button onClick={connectScale} className="w-full py-3 bg-blue-900/30 border border-blue-500/50 rounded-xl text-blue-400 font-bold flex items-center justify-center gap-2 hover:bg-blue-900/50 transition-colors">
-                            <Icons.Bluetooth /> Connect Scale (Show All)
+                            <Icons.Bluetooth /> Connect Scale
                         </button>
                     ) : (
                         <div className="bg-blue-900/20 border border-blue-500/50 rounded-xl p-2 flex flex-col gap-2">
