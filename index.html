@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Scanner v38 - Reaching Logic</title>
+    <title>Scanner v39 - Well Logic Fixed</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -245,7 +245,8 @@
             const subZoneLabel = zones.find(z=>z.id===subZoneId)?.label;
             const targetField = zones.length > 0 ? subZoneId : initialLocation;
             
-            const isOpenZone = (initialSubZone === 'bar1_shelf_open' || initialSubZone === 'bar1_reaching'); // Added Reaching here too
+            // 🔥 FIXED: Well 1 & 2 are now OPEN style (no buttons). Reaching is NORMAL style.
+            const isOpenZone = ['bar1_shelf_open', 'bar1_well_1', 'bar1_well_2'].includes(initialSubZone);
             const [manualGrams, setManualGrams] = useState("");
 
             // SPECIAL 4-SLOT LOGIC FOR CORONA/MODELO IN BEER COOLER
@@ -391,7 +392,7 @@
                         </>
                     )}
                 
-                    {/* --- MANUAL WEIGHT SECTION (ONLY FOR SHELF OPEN OR REACHING) --- */}
+                    {/* --- MANUAL WEIGHT SECTION (ONLY FOR SHELF OPEN OR WELLS) --- */}
                     {isOpenZone && (
                         <div className="mt-6 w-full px-6 max-w-sm border-t border-gray-800 pt-4">
                             {(!item.weight_full || !item.weight_empty) ? (
@@ -610,7 +611,7 @@
                     <div className="flex justify-between items-center mb-6 relative">
                         <div className="flex flex-col">
                              <h1 className="font-black text-2xl text-white italic leading-none">SCANNER <span className="text-indigo-500">PRO</span></h1>
-                             <span className="text-[10px] text-gray-600 font-mono tracking-widest">v37.0</span>
+                             <span className="text-[10px] text-gray-600 font-mono tracking-widest">v39.0</span>
                         </div>
                         
                         <div className="flex items-center gap-2">
