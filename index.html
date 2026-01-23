@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Scanner v4.3 - Etekcity Bluetooth</title>
+    <title>Scanner v4.4 - Persistent Scale</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -22,7 +22,7 @@
             --neon-purple: #8b5cf6;
             --neon-pink: #ec4899;
             --neon-green: #10b981;
-            --neon-blue: #3b82f6; /* Nuevo para Bluetooth */
+            --neon-blue: #3b82f6;
             --bg-dark: #050505;
         }
         
@@ -90,6 +90,7 @@
         .text-neon-cyan { color: var(--neon-cyan); text-shadow: 0 0 10px rgba(6,182,212,0.5); }
         .text-neon-purple { color: var(--neon-purple); text-shadow: 0 0 10px rgba(139,92,246,0.5); }
         .text-neon-blue { color: var(--neon-blue); text-shadow: 0 0 10px rgba(59,130,246,0.5); }
+        .border-neon-cyan { border-color: var(--neon-cyan); }
     </style>
 </head>
 <body>
@@ -152,7 +153,7 @@
             Link: (p) => <IconWrapper {...p}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></IconWrapper>,
             Save: (p) => <IconWrapper {...p}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></IconWrapper>,
             Star: (p) => <IconWrapper {...p}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></IconWrapper>,
-            Package: (p) => <IconWrapper {...p}><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22v-9"/></IconWrapper>,
+            Package: (p) => <IconWrapper {...p}><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22v-9"/></IconWrapper>,
             Barcode: (p) => <IconWrapper {...p}><path d="M3 5v14"/><path d="M8 5v14"/><path d="M12 5v14"/><path d="M17 5v14"/><path d="M21 5v14"/></IconWrapper>,
             ShoppingCart: (p) => <IconWrapper {...p}><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></IconWrapper>,
             Settings: (p) => <IconWrapper {...p}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z"/></IconWrapper>,
@@ -242,7 +243,13 @@
         };
 
         const ReviewModal = ({ onClose, data, onUpdate }) => {
-            const mainLocs = [ { id: 'bar1', label: 'Bar 1', color: 'text-cyan-400', border: 'border-cyan-500' }, { id: 'bar2', label: 'Bar 2', color: 'text-purple-400', border: 'border-purple-500' }, { id: 'bodega', label: 'Storage', color: 'text-amber-400', border: 'border-amber-500' }, { id: 'barroluco', label: 'Barroluco', color: 'text-pink-400', border: 'border-pink-500' } ];
+            const mainLocs = [ 
+                { id: 'bar1', label: 'Bar 1', color: 'text-cyan-400', border: 'border-cyan-500' }, 
+                { id: 'bar2', label: 'Bar 2', color: 'text-purple-400', border: 'border-purple-500' }, 
+                { id: 'bodega', label: 'Storage', color: 'text-amber-400', border: 'border-amber-500' }, 
+                { id: 'barroluco', label: 'Barroluco', color: 'text-pink-400', border: 'border-pink-500' } 
+            ];
+            
             return (
                 <div className="fixed inset-0 z-50 flex flex-col animate-in backdrop-blur-xl bg-black/90">
                     <div className="p-4 bg-black/80 border-b border-white/10 flex justify-between items-center shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.8)]"><h2 className="text-xl font-bold text-white flex items-center gap-2"><Icons.List className="text-neon-cyan" /> Count Check</h2><button onClick={onClose} className="bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-xl font-bold border border-white/10 backdrop-blur-md transition-all">Close</button></div>
@@ -254,7 +261,10 @@
                             if (mainTotal === 0) return null;
                             return (
                                 <div key={main.id} className="space-y-3 relative">
-                                    <div className={`sticky top-0 z-10 glass-strong py-3 px-4 rounded-xl mb-4 flex justify-between items-center border-l-4 ${main.border}`}><h3 className={`font-black text-lg uppercase tracking-widest drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] ${main.color}`}>{main.label}</h3><span className="text-white font-mono text-sm font-bold bg-black/50 px-3 py-1 rounded border border-white/10 shadow-inner">Total: {mainTotal}</span></div>
+                                    <div className={`sticky top-0 z-10 glass-strong py-3 px-4 rounded-xl mb-4 flex justify-between items-center border-l-4 ${main.border}`}>
+                                        <h3 className={`font-black text-lg uppercase tracking-widest drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] ${main.color}`}>{main.label}</h3> 
+                                        <span className="text-white font-mono text-sm font-bold bg-black/50 px-3 py-1 rounded border border-white/10 shadow-inner">Total: {mainTotal}</span>
+                                    </div>
                                     {subZones.map(zone => { 
                                         const zoneItems = data.flatMap(cat => cat.items.filter(i => (parseFloat(i[zone.id])||0) > 0)).map(i => ({...i, val: parseFloat(i[zone.id])})); 
                                         if (zoneItems.length === 0) return null; 
@@ -312,21 +322,29 @@
                 </div>
             );
         };
-        const QuickEditModal = ({ item, onClose, onContinue, onUpdate, initialLocation, initialSubZone, onOpenCalibration }) => {
+        // --- QUICK EDIT MODAL (CON SOPORTE PARA BALANZA PERSISTENTE) ---
+        const QuickEditModal = ({ 
+            item, 
+            onClose, 
+            onContinue, 
+            onUpdate, 
+            initialLocation, 
+            initialSubZone, 
+            onOpenCalibration,
+            // Nuevas props recibidas desde App para la persistencia
+            scaleWeight,
+            isScaleConnected,
+            onConnectScale
+        }) => {
             const [value, setValue] = useState(0);
             const [manualGrams, setManualGrams] = useState("");
-            const [isScaleConnected, setIsScaleConnected] = useState(false);
             
-            // SCALE CONFIG
-            const SCALE_SERVICE_UUID = 0xFFF0;
-            const SCALE_CHAR_UUID    = 0xFFF1;
-
             const zones = ZONES_CONFIG[initialLocation] || [];
             const subZoneId = initialSubZone || (zones[0]?.id);
             const subZoneLabel = zones.find(z=>z.id===subZoneId)?.label;
             const targetField = zones.length > 0 ? subZoneId : initialLocation;
             
-            // Zones allowed for Bluetooth Scale
+            // Zonas permitidas para Balanza
             const isOpenZone = ['bar1_shelf_open', 'bar1_well_1', 'bar1_well_2'].includes(initialSubZone);
             
             const isSmallGroup = ['bar1_shelf_full', 'bar2_cooler', 'bar2_small_cooler', 'bodega_closet'].includes(initialSubZone) || initialLocation === 'barroluco';
@@ -337,11 +355,20 @@
 
             useEffect(() => { if(!isMultiCount) setValue(parseFloat(item[targetField]) || 0); else { const sum = slots.reduce((a, b) => a + (parseFloat(b)||0), 0); setValue(sum); } }, [item, targetField, isMultiCount, slots]);
 
+            // --- ESCUCHA ACTIVA DE LA BALANZA (PERSISTENCIA) ---
+            useEffect(() => {
+                // Si la balanza envía un dato y estamos en una zona de pesaje, actualizamos
+                if (isOpenZone && scaleWeight !== null && scaleWeight !== undefined && scaleWeight !== "") {
+                    setManualGrams(scaleWeight);
+                    performCalculation(scaleWeight);
+                }
+            }, [scaleWeight]); // Se dispara cada vez que App recibe un dato nuevo de Bluetooth
+
             const updateValue = (next) => { setValue(next); if (zones.length > 0) { let newTotal = 0; zones.forEach(z => { if (z.id === subZoneId) newTotal += next; else newTotal += (parseFloat(item[z.id]) || 0); }); onUpdate(item.id, { [subZoneId]: next, [initialLocation]: newTotal }); } else { onUpdate(item.id, initialLocation, next); } };
             const handleSlotChange = (idx, val) => { const newSlots = [...slots]; newSlots[idx] = val === "" ? 0 : parseFloat(val); setSlots(newSlots); const newSum = newSlots.reduce((a, b) => a + b, 0); setValue(newSum); let newTotal = 0; zones.forEach(z => { if (z.id === subZoneId) newTotal += newSum; else newTotal += (parseFloat(item[z.id]) || 0); }); onUpdate(item.id, { [subZoneId]: newSum, [initialLocation]: newTotal, breakdown_bar1_cooler: newSlots }); };
             const handleDelta = (delta) => { const next = Math.max(0, Math.round((value + delta) * 100) / 100); updateValue(next); if(delta>0) playSound('add'); else playSound('sub'); };
             
-            // --- LOGICA DE CALCULO (Manual + Bluetooth) ---
+            // --- LÓGICA DE CÁLCULO ---
             const performCalculation = (gramsInput) => {
                 const grams = parseFloat(gramsInput);
                 if (isNaN(grams) && gramsInput !== "") return;
@@ -350,7 +377,6 @@
                 const full = parseFloat(item.weight_full);
                 const empty = parseFloat(item.weight_empty);
                 
-                // Si no hay configuración, no calculamos nada
                 if (!full || !empty) return; 
                 
                 const netLiquid = full - empty;
@@ -368,52 +394,12 @@
                 performCalculation(val);
             };
 
-            // --- LOGICA BLUETOOTH ETEKCITY ---
-            const connectScale = async () => {
-                try {
-                    const device = await navigator.bluetooth.requestDevice({
-                        filters: [{ namePrefix: 'Etekcity' }], 
-                        optionalServices: [SCALE_SERVICE_UUID]
-                    });
-                    
-                    const server = await device.gatt.connect();
-                    const service = await server.getPrimaryService(SCALE_SERVICE_UUID);
-                    const characteristic = await service.getCharacteristic(SCALE_CHAR_UUID);
-
-                    await characteristic.startNotifications();
-                    setIsScaleConnected(true);
-                    playSound('connect');
-
-                    characteristic.addEventListener('characteristicvaluechanged', (event) => {
-                        const value = event.target.value;
-                        if (value.byteLength < 12) return;
-
-                        // Leemos el valor crudo (byte 11) y dividimos por 10 segun tu logica
-                        const weightRaw = value.getUint16(11, true); 
-                        const finalWeight = (weightRaw / 10).toFixed(1); // 1 decimal para precisión
-
-                        setManualGrams(finalWeight);
-                        performCalculation(finalWeight);
-                    });
-
-                } catch (error) {
-                    console.error("Scale Error:", error);
-                    alert("Bluetooth Error: " + error.message);
-                    setIsScaleConnected(false);
-                }
-            };
-            // -----------------------------------
-
             const sessionDiff = Math.round((value - startVal) * 100) / 100; const diffSign = sessionDiff > 0 ? "+" : ""; const diffColor = sessionDiff > 0 ? "text-emerald-400 drop-shadow-[0_0_15px_rgba(52,211,153,0.8)]" : sessionDiff < 0 ? "text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]" : "text-gray-600";
 
             return (
                 <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-2 animate-in backdrop-blur-xl bg-black/90"><div className="glass-strong w-full max-w-md rounded-3xl overflow-hidden flex flex-col h-[90vh] shadow-[0_0_50px_rgba(0,0,0,0.8)] border border-white/5 relative"><div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 opacity-50"></div><div className="p-5 bg-black/40 border-b border-white/5 flex justify-between items-center"><div><h2 className="text-2xl font-black text-white leading-none tracking-tight">{item.name}</h2><div className="text-xs text-cyan-400 font-mono mt-1 uppercase tracking-widest">{initialLocation} {subZoneLabel ? `> ${subZoneLabel}` : ''}</div></div><button onClick={onClose} className="bg-white/5 hover:bg-white/10 text-white p-3 rounded-xl font-bold backdrop-blur-md transition-all active:scale-90">✕</button></div><div className="flex-1 flex flex-col items-center justify-center relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-900/5 to-transparent pointer-events-none"></div>
-                    
-                    {/* BIG NUMBER DISPLAY */}
                     <div className={`text-[9rem] font-black font-mono tracking-tighter leading-none mb-4 transition-all duration-200 select-none ${diffColor}`}>{diffSign}{sessionDiff}</div>
-                    
-                    {/* TOTAL DISPLAY */}
                     <div className="text-xl font-mono font-bold text-gray-400 mb-6 bg-black/60 px-6 py-2 rounded-full border border-white/10 backdrop-blur-md shadow-lg">Total: <span className="text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">{value}</span></div>
 
                     {isMultiCount ? (
@@ -423,22 +409,22 @@
                         </div>
                     ) : (
                         <>
-                            {/* --- WEIGHT CALCULATOR & BLUETOOTH (Placed HERE) --- */}
+                            {/* --- WEIGHT CALCULATOR (PERSISTENT LOGIC) --- */}
                             {isOpenZone && (
                                 <div className="w-full px-6 max-w-sm relative z-10 mb-6 animate-in">
                                     {(!item.weight_full || !item.weight_empty) ? (
                                         <button onClick={() => onOpenCalibration(item)} className="w-full py-4 bg-yellow-500/10 border border-yellow-500/50 rounded-xl text-yellow-400 font-bold flex items-center justify-center gap-2 hover:bg-yellow-500/20 transition-all shadow-[0_0_15px_rgba(234,179,8,0.2)] backdrop-blur-sm animate-pulse"><Icons.Wrench /> ⚠️ SETUP WEIGHTS</button>
                                     ) : (
                                         <div className="flex flex-col gap-3">
-                                            {/* Header with Bluetooth Button */}
+                                            {/* Header with Connect Button (Calls Parent Function) */}
                                             <div className="flex justify-between items-end px-1">
                                                 <span className="text-xs text-cyan-500 font-bold uppercase tracking-widest">Weight Calc</span>
                                                 <button 
-                                                    onClick={connectScale}
+                                                    onClick={onConnectScale}
                                                     disabled={isScaleConnected}
                                                     className={`text-[10px] font-bold px-3 py-1 rounded-full border transition-all flex items-center gap-1 uppercase tracking-wider
                                                         ${isScaleConnected 
-                                                            ? 'bg-blue-500/20 text-blue-400 border-blue-500/50 shadow-[0_0_10px_rgba(59,130,246,0.3)]' 
+                                                            ? 'bg-blue-500/20 text-blue-400 border-blue-500/50 shadow-[0_0_10px_rgba(59,130,246,0.3)] cursor-default' 
                                                             : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white'}
                                                     `}
                                                 >
@@ -527,7 +513,7 @@
             ];
             const [selMain, setSelMain] = useState(null);
             
-            // FIX: Prevent crash if zone has no sub-zones defined
+            // Protección contra zonas vacías
             const subZones = selMain ? (ZONES_CONFIG[selMain] || []) : [];
 
             return (
@@ -538,7 +524,6 @@
                             {!selMain ? locs.map(l=><button key={l.id} onClick={()=>{if(ZONES_CONFIG[l.id]) setSelMain(l.id); else onSelect(l.id, null);}} className="glass hover:bg-white/5 hover:border-white/20 text-white p-6 rounded-2xl flex flex-col items-center gap-3 transition-all active:scale-95 group border-transparent"><l.i className={`w-10 h-10 ${l.c} drop-shadow-[0_0_10px_rgba(255,255,255,0.2)] group-hover:scale-110 transition-transform`}/><span className="font-bold tracking-wider">{l.l}</span></button>) : 
                             subZones.map(z=><button key={z.id} onClick={()=>onSelect(selMain, z.id)} className="glass hover:bg-white/5 hover:border-white/20 text-white p-5 rounded-2xl flex flex-col items-center gap-3 transition-all active:scale-95 group border-transparent"><span className="text-3xl filter grayscale group-hover:grayscale-0 transition-all duration-300">{z.icon}</span><span className="font-medium text-sm text-gray-300 group-hover:text-white">{z.label}</span></button>)}
                             
-                            {/* Empty State protection */}
                             {selMain && subZones.length === 0 && (
                                 <div className="col-span-2 text-center text-gray-500 py-10">No sub-zones. <button onClick={()=>onSelect(selMain, null)} className="text-cyan-400 underline ml-2">Select Main</button></div>
                             )}
@@ -585,7 +570,11 @@
             const [pendingBarcode, setPendingBarcode] = useState(null);
             const [calibratingItem, setCalibratingItem] = useState(null);
             const [isOnline, setIsOnline] = useState(navigator.onLine);
-            const [uploading, setUploading] = useState(false);
+            
+            // --- PERSISTENT BLUETOOTH STATE ---
+            const [scaleWeight, setScaleWeight] = useState("");
+            const [isScaleConnected, setIsScaleConnected] = useState(false);
+            // ----------------------------------
 
             useEffect(() => {
                 const handleStatus = () => setIsOnline(navigator.onLine);
@@ -607,6 +596,48 @@
                     } else setStatus("Offline");
                 });
             }, []);
+
+            // --- GLOBAL BLUETOOTH CONNECT FUNCTION ---
+            const handleConnectScale = async () => {
+                try {
+                    const device = await navigator.bluetooth.requestDevice({
+                        filters: [{ namePrefix: 'Etekcity' }], 
+                        optionalServices: [0xFFF0] // SCALE_SERVICE_UUID (Hardcoded for clarity in App scope)
+                    });
+                    
+                    const server = await device.gatt.connect();
+                    const service = await server.getPrimaryService(0xFFF0);
+                    const characteristic = await service.getCharacteristic(0xFFF1);
+
+                    await characteristic.startNotifications();
+                    setIsScaleConnected(true);
+                    playSound('connect');
+
+                    characteristic.addEventListener('characteristicvaluechanged', (event) => {
+                        const value = event.target.value;
+                        if (value.byteLength < 12) return;
+                        
+                        // Parse logic: Byte 11 / 10
+                        const weightRaw = value.getUint16(11, true); 
+                        const finalWeight = (weightRaw / 10).toFixed(1); 
+                        
+                        // Update global state
+                        setScaleWeight(finalWeight);
+                    });
+                    
+                    // Handle disconnection
+                    device.addEventListener('gattserverdisconnected', () => {
+                        setIsScaleConnected(false);
+                        playSound('error');
+                    });
+
+                } catch (error) {
+                    console.error("Global Scale Error:", error);
+                    alert("Bluetooth Error: " + error.message);
+                    setIsScaleConnected(false);
+                }
+            };
+            // -----------------------------------------
 
             const handleUpdate = (id, fieldOrObj, val) => {
                 const newData = data.map(cat => ({ ...cat, items: cat.items.map(i => { if(i.id === id) { if(typeof fieldOrObj === 'object') return {...i, ...fieldOrObj}; return {...i, [fieldOrObj]: val}; } return i; }) }));
@@ -658,8 +689,9 @@
                         <div className="flex flex-col">
                              <h1 className="font-black text-3xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 italic leading-none drop-shadow-[0_0_10px_rgba(6,182,212,0.5)]">SCANNER <span className="text-white">PRO</span></h1>
                              <div className="flex items-center gap-2 mt-1">
-                                <span className="text-[10px] text-gray-500 font-mono tracking-widest uppercase">Sys.v4.3</span>
+                                <span className="text-[10px] text-gray-500 font-mono tracking-widest uppercase">Sys.v4.4</span>
                                 <div className={`w-2 h-2 rounded-full animate-pulse ${isOnline ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]'}`}></div>
+                                {isScaleConnected && <div className="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded border border-blue-500/50 flex items-center gap-1"><Icons.Bluetooth className="w-3 h-3"/> SCALE ON</div>}
                              </div>
                         </div>
                         <div className="flex items-center gap-3">
@@ -732,7 +764,23 @@
                     {showLoc && <LocationModal onClose={() => setShowLoc(false)} onSelect={(l, s) => { setLoc(l); setSubZone(s); setShowLoc(false); }} />}
                     {scanning && <ScannerModal onScan={handleScan} onClose={() => setScanning(false)} />}
                     {calibratingItem && <BottleCalibrationModal item={calibratingItem} onClose={()=>setCalibratingItem(null)} onSave={saveBottleWeights} />}
-                    {editItem && <QuickEditModal item={editItem} initialLocation={loc} initialSubZone={subZone} onClose={() => setEditItem(null)} onOpenCalibration={setCalibratingItem} onContinue={() => { setEditItem(null); setTimeout(() => setScanning(true), 300); }} onUpdate={handleUpdate} />}
+                    
+                    {/* MODAL DE EDICIÓN CON PROPS DE BLUETOOTH PERSISTENTE */}
+                    {editItem && (
+                        <QuickEditModal 
+                            item={editItem} 
+                            initialLocation={loc} 
+                            initialSubZone={subZone} 
+                            onClose={() => setEditItem(null)} 
+                            onOpenCalibration={setCalibratingItem} 
+                            onContinue={() => { setEditItem(null); setTimeout(() => setScanning(true), 300); }} 
+                            onUpdate={handleUpdate}
+                            // PROPS CLAVE
+                            scaleWeight={scaleWeight}
+                            isScaleConnected={isScaleConnected}
+                            onConnectScale={handleConnectScale}
+                        />
+                    )}
                 </div>
             );
         }
