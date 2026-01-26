@@ -301,6 +301,7 @@
                 </div>
             );
         };
+        // --- QUICK EDIT MODAL (PROTECTED SMART SCALE) ---
         const QuickEditModal = ({ 
             item, 
             onClose, 
@@ -320,7 +321,6 @@
             const subZoneId = initialSubZone || (zones[0]?.id);
             const subZoneLabel = zones.find(z=>z.id===subZoneId)?.label;
             
-            // Campos para Historial
             const targetField = zones.length > 0 ? subZoneId : initialLocation;
             const historyKey = `last_${targetField}`;
             const historyVal = item[historyKey] !== undefined ? item[historyKey] : '-';
@@ -330,15 +330,17 @@
             const isMultiCount = (subZoneId === 'bar1_cooler' && (item.name.toLowerCase().includes('corona') || item.name.toLowerCase().includes('modelo')));
             
             const [slots, setSlots] = useState(() => { if(isMultiCount && item.breakdown_bar1_cooler) return item.breakdown_bar1_cooler; return [0, 0, 0, 0]; });
+            
+            // Valor inicial al abrir el modal (ej: 0.4)
             const [startVal] = useState(() => parseFloat(item[targetField]) || 0);
 
             useEffect(() => { if(!isMultiCount) setValue(parseFloat(item[targetField]) || 0); else { const sum = slots.reduce((a, b) => a + (parseFloat(b)||0), 0); setValue(sum); } }, [item, targetField, isMultiCount, slots]);
 
-            // --- CORRECCIÓN SMART SCALE: Evita sobrescribir con 0 si ya hay dato ---
+            // Escucha de balanza
             useEffect(() => {
                 if (isOpenZone && scaleWeight !== null && scaleWeight !== undefined && scaleWeight !== "") {
                     setManualGrams(scaleWeight);
-                    performCalculation(scaleWeight, true); // true = es automático
+                    performCalculation(scaleWeight, true); // true indica que viene de la balanza automática
                 }
             }, [scaleWeight]);
 
@@ -346,24 +348,30 @@
             const handleSlotChange = (idx, val) => { const newSlots = [...slots]; newSlots[idx] = val === "" ? 0 : parseFloat(val); setSlots(newSlots); const newSum = newSlots.reduce((a, b) => a + b, 0); setValue(newSum); let newTotal = 0; zones.forEach(z => { if (z.id === subZoneId) newTotal += newSum; else newTotal += (parseFloat(item[z.id]) || 0); }); onUpdate(item.id, { [subZoneId]: newSum, [initialLocation]: newTotal, breakdown_bar1_cooler: newSlots }); };
             const handleDelta = (delta) => { const next = Math.max(0, Math.round((value + delta) * 100) / 100); updateValue(next); if(delta>0) playSound('add'); else playSound('sub'); };
             
+            // --- LÓGICA DE CÁLCULO INTELIGENTE ---
             const performCalculation = (gramsInput, isAuto = false) => {
                 const grams = parseFloat(gramsInput);
                 if (isNaN(grams) && gramsInput !== "") return;
                 if (gramsInput === "") return;
+
                 const full = parseFloat(item.weight_full);
                 const empty = parseFloat(item.weight_empty);
+                
                 if (!full || !empty) return; 
+                
                 const netLiquid = full - empty;
                 const currentLiquid = grams - empty;
+                
                 let calculatedUnits = currentLiquid / netLiquid;
                 if (calculatedUnits < 0) calculatedUnits = 0;
                 
                 const finalVal = Math.round(calculatedUnits * 100) / 100;
 
                 // --- PROTECCIÓN DE DATOS ---
-                // Si viene de la balanza automática (isAuto), el resultado es 0,
-                // PERO ya tenemos un valor guardado (> 0), IGNORAMOS la balanza.
-                // Asumimos que la balanza está vacía y acabas de re-escanear la botella llena.
+                // Si la actualización es automática (Balanza) Y el resultado es 0 
+                // Y ya tenemos un valor guardado en la base de datos (> 0),
+                // ASUMIMOS que la balanza está vacía o quitaste la botella. 
+                // NO actualizamos a 0 para proteger el dato anterior.
                 if (isAuto && finalVal === 0 && startVal > 0) {
                     return; 
                 }
@@ -380,7 +388,7 @@
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-900/5 to-transparent pointer-events-none"></div>
                     <div className={`text-[9rem] font-black font-mono tracking-tighter leading-none mb-4 transition-all duration-200 select-none ${diffColor}`}>{diffSign}{sessionDiff}</div>
                     
-                    {/* --- TOTAL + HISTORY POR ZONA --- */}
+                    {/* TOTAL + HISTORY */}
                     <div className="flex items-center gap-4 mb-6">
                         <div className="text-xl font-mono font-bold text-gray-400 bg-black/60 px-6 py-3 rounded-2xl border border-white/10 backdrop-blur-md shadow-lg flex flex-col items-center min-w-[100px]">
                             <span className="text-[10px] uppercase tracking-widest text-cyan-500 mb-1">Now</span>
