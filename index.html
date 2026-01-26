@@ -301,7 +301,7 @@
                 </div>
             );
         };
-        // --- QUICK EDIT MODAL (PROTECTED SMART SCALE) ---
+    // --- QUICK EDIT MODAL (CON PROTECCIÓN INTELIGENTE DE BALANZA) ---
         const QuickEditModal = ({ 
             item, 
             onClose, 
@@ -331,16 +331,17 @@
             
             const [slots, setSlots] = useState(() => { if(isMultiCount && item.breakdown_bar1_cooler) return item.breakdown_bar1_cooler; return [0, 0, 0, 0]; });
             
-            // Valor inicial al abrir el modal (ej: 0.4)
+            // Valor inicial guardado en base de datos (ej: 0.4)
             const [startVal] = useState(() => parseFloat(item[targetField]) || 0);
 
             useEffect(() => { if(!isMultiCount) setValue(parseFloat(item[targetField]) || 0); else { const sum = slots.reduce((a, b) => a + (parseFloat(b)||0), 0); setValue(sum); } }, [item, targetField, isMultiCount, slots]);
 
-            // Escucha de balanza
+            // ESCUCHA DE BALANZA
             useEffect(() => {
+                // Solo actualizamos si hay un peso válido
                 if (isOpenZone && scaleWeight !== null && scaleWeight !== undefined && scaleWeight !== "") {
                     setManualGrams(scaleWeight);
-                    performCalculation(scaleWeight, true); // true indica que viene de la balanza automática
+                    performCalculation(scaleWeight, true); // true = Automático (Balanza)
                 }
             }, [scaleWeight]);
 
@@ -348,15 +349,16 @@
             const handleSlotChange = (idx, val) => { const newSlots = [...slots]; newSlots[idx] = val === "" ? 0 : parseFloat(val); setSlots(newSlots); const newSum = newSlots.reduce((a, b) => a + b, 0); setValue(newSum); let newTotal = 0; zones.forEach(z => { if (z.id === subZoneId) newTotal += newSum; else newTotal += (parseFloat(item[z.id]) || 0); }); onUpdate(item.id, { [subZoneId]: newSum, [initialLocation]: newTotal, breakdown_bar1_cooler: newSlots }); };
             const handleDelta = (delta) => { const next = Math.max(0, Math.round((value + delta) * 100) / 100); updateValue(next); if(delta>0) playSound('add'); else playSound('sub'); };
             
-            // --- LÓGICA DE CÁLCULO INTELIGENTE ---
+            // --- LÓGICA DE CÁLCULO CON PROTECCIÓN ---
             const performCalculation = (gramsInput, isAuto = false) => {
                 const grams = parseFloat(gramsInput);
+                // Si no es un número, salimos
                 if (isNaN(grams) && gramsInput !== "") return;
-                if (gramsInput === "") return;
-
+                
                 const full = parseFloat(item.weight_full);
                 const empty = parseFloat(item.weight_empty);
                 
+                // Si falta configuración, no hacemos nada
                 if (!full || !empty) return; 
                 
                 const netLiquid = full - empty;
@@ -367,11 +369,10 @@
                 
                 const finalVal = Math.round(calculatedUnits * 100) / 100;
 
-                // --- PROTECCIÓN DE DATOS ---
-                // Si la actualización es automática (Balanza) Y el resultado es 0 
-                // Y ya tenemos un valor guardado en la base de datos (> 0),
-                // ASUMIMOS que la balanza está vacía o quitaste la botella. 
-                // NO actualizamos a 0 para proteger el dato anterior.
+                // *** PROTECCIÓN DE SOBRESCRITURA ***
+                // Si viene de la balanza (isAuto), el resultado es 0, 
+                // Y ya teníamos un valor guardado (startVal > 0),
+                // IGNORAMOS la actualización. Asumimos que la balanza está vacía.
                 if (isAuto && finalVal === 0 && startVal > 0) {
                     return; 
                 }
@@ -379,9 +380,13 @@
                 updateValue(finalVal);
             };
 
+            // Manual siempre es false en isAuto, para que si escribes 0 a mano, sí te deje poner 0.
             const handleManualInput = (val) => { setManualGrams(val); performCalculation(val, false); };
 
-            const sessionDiff = Math.round((value - startVal) * 100) / 100; const diffSign = sessionDiff > 0 ? "+" : ""; const diffColor = sessionDiff > 0 ? "text-emerald-400 drop-shadow-[0_0_15px_rgba(52,211,153,0.8)]" : sessionDiff < 0 ? "text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]" : "text-gray-600";
+            const sessionDiff = Math.round((value - startVal) * 100) / 100; 
+            const diffSign = sessionDiff > 0 ? "+" : ""; 
+            // Si la diferencia es 0, color gris. Si cambia, verde o rojo.
+            const diffColor = sessionDiff > 0 ? "text-emerald-400 drop-shadow-[0_0_15px_rgba(52,211,153,0.8)]" : sessionDiff < 0 ? "text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]" : "text-gray-600";
 
             return (
                 <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-2 animate-in backdrop-blur-xl bg-black/90"><div className="glass-strong w-full max-w-md rounded-3xl overflow-hidden flex flex-col h-[90vh] shadow-[0_0_50px_rgba(0,0,0,0.8)] border border-white/5 relative"><div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 opacity-50"></div><div className="p-5 bg-black/40 border-b border-white/5 flex justify-between items-center"><div><h2 className="text-2xl font-black text-white leading-none tracking-tight">{item.name}</h2><div className="text-xs text-cyan-400 font-mono mt-1 uppercase tracking-widest">{initialLocation} {subZoneLabel ? `> ${subZoneLabel}` : ''}</div></div><button onClick={onClose} className="bg-white/5 hover:bg-white/10 text-white p-3 rounded-xl font-bold backdrop-blur-md transition-all active:scale-90">✕</button></div><div className="flex-1 flex flex-col items-center justify-center relative overflow-hidden">
